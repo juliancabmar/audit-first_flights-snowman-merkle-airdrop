@@ -77,7 +77,9 @@ Goodluck ⛄
 ```bash
     git clone https://github.com/CodeHawks-Contests/2025-06-snowman-merkle-airdrop.git 
     cd 2025-06-snowman-merkle-airdrop
-    forge install
+    forge install OpenZeppelin/openzeppelin-contracts --no-commit
+    forge install foundry-rs/forge-std --no-commit
+    forge install dmfxyz/murky --no-commit
     forge build
     forge test
 ```
