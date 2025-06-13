@@ -34,6 +34,32 @@ In anticipation of the upcoming snow season, help secure the **Snowman Merkle Ai
 
     Recipients stake their `Snow` tokens and receive `Snowman` NFTS equal to their `Snow` balance in return
 
+### Spanish About
+
+- `Snow.sol`:
+
+    El contrato `Snow` es un token `ERC20` que automáticamente hace que uno sea elegible para reclamar un `Snowman NFT`.
+
+    El token `Snow` se deposita en el contrato `SnowmanAirdrop`, y el depositante recibe `Snowman` NFTs en función de la cantidad de tokens `Snow` que posee.
+
+    El token `Snow` puede ganarse de forma gratuita una vez a la semana, o comprarse en cualquier momento, hasta que termine el `::FARMING_DURATION`.
+
+    El token `Snow` puede comprarse con `WETH` o `ETH` nativo.
+
+- `Snowman.sol`:
+
+    El contrato `Snowman` es un contrato `ERC721` que utiliza codificación `Base64` para lograr almacenamiento completamente en cadena.
+
+    Los depositantes del token `Snow` reciben este NFT.
+
+- `SnowmanAirdrop.sol`:
+
+    El contrato `SnowmanAirdrop` utiliza una implementación de árboles `Merkle` para un sistema de airdrop más eficiente.
+
+    Los destinatarios pueden reclamar un `Snowman` NFT ellos mismos, o hacer que alguien lo reclame en su nombre utilizando las firmas `v`, `r`, `s` del destinatario.
+
+    Los destinatarios depositan sus tokens `Snow` y reciben `Snowman` NFTs equivalentes a su saldo de `Snow` como retorno.
+
 ### Resources:
 
 - Learn about Merkle trees [`here`](https://updraft.cyfrin.io/courses/advanced-foundry/merkle-airdrop/introduction) and [`here`](https://www.youtube.com/watch?v=s7C2KjZ9n2U)
