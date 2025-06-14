@@ -1,1 +1,0 @@
-[Obtener NFTs `Snowman`]
