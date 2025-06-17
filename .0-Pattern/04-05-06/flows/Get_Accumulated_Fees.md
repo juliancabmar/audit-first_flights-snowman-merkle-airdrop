@@ -1,2 +1,6 @@
-[Obtener las fees acumuladas de las compras de `snow`]
-The collector "collect" the acumulated fees from the Snow buys [A: Collector / T: Snow::collectFee]
+Obtener las fees acumuladas de las compras de `snow`:
+
+
+l: caller must be a "collector"
+    Collector --> Snow::collectFee()
+        [accumulated fees getted]

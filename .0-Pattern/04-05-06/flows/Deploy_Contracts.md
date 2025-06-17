@@ -1,7 +1,25 @@
-[---]deployar los contratos
-deploy and initialize Snow contract [A: Deployer / T: Snow::constructor]
-deploy and initialize Snowman contract [A: Deployer / T: Snowman::constructor]
-    deploy and initialize SnowmanAirDrop contract [A: Deployer / T: SnowAirDrop::constructor]
+Deployar los contratos:
+
+
+WETH Deployer--> WETH::constructor(params)
+    [WETH token contract deployed]
+        p: WETH token address
+        p: fee
+        p: Collector address
+            Deployer--> Snow::constructor(params)
+                    [Snow contract deployed]
+
+p: Uri image
+    Deployer--> Snowman::constructor(params)
+        [Snowman contract deployed]
+
+    p: merkle root hash
+[Snow contract deployed]    
+    p: Snow token contract address
+[Snowman contract deployed]
+    p: Snowman Nft contract address
+        Deployer--> SnowmanAirdrop::constructor(params)
+            [SnowmanAirdrop contract deployed]
 
 ```solidity
 function testDeployContracts() public {
@@ -36,46 +54,3 @@ function svgToImageURI(string memory svg) public pure returns (string memory) {
     return string(abi.encodePacked(baseURL, svgBase64Encoded));
 }
 ```
-WETH Deployer--> WETH::constructor(params)
-    [WETH token contract deployed]
-        p: WETH token address
-        p: fee
-        p: Collector address
-            Deployer--> Snow::constructor(params)
-                    [Snow contract deployed]
-
-p: Uri image
-    Deployer--> Snowman::constructor(params)
-        [Snowman contract deployed]
-
-    p: merkle root hash
-[Snow contract deployed]    
-    p: Snow token contract address
-[Snowman contract deployed]
-    p: Snowman Nft contract address
-    Deployer--> SnowmanAirdrop::constructor(params)
-        [SnowmanAirdrop contract deployed]
-
-[ETH on account]    
-    p: {value} enough ETH
-    p: quantity to buy
-        User--> Snow::buySnow{value}(params)
-            [buyed Snow tokens with ETH]
-
-[WETH owned]
-    p: quantity to buy
-        User--> Snow::buySnow(params)
-            [buyed Snow tokens with WETH]
-
-l: be on Farming season
-l: a week passed from the last claim
-        User--> Snow::earnSnow()
-            [earned Snow tokens]
-
-o: [buyed Snow tokens with ETH]
-o: [buyed Snow tokens with WETH]
-o: [earned Snow tokens] 
-    [Snow Tokens owned]
-
-
-[getted Snowman Nfts directly]

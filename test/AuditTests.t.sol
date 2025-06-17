@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.24;
 
 import {Test, console2} from "forge-std/Test.sol";
@@ -6,38 +6,77 @@ import {Snow} from "../src/Snow.sol";
 import {Snowman} from "../src/Snowman.sol";
 import {SnowmanAirdrop} from "../src/SnowmanAirdrop.sol";
 import {MockWETH} from "../src/mock/MockWETH.sol";
-import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
+import {Helper} from "../script/Helper.s.sol";
 
-contract AuditTests is Test {
-    function testDeployContracts() public {
-        // common setup
-        address deployer = makeAddr("deployer");
-        address collector = makeAddr("collector");
+contract TestSnowmanAirdrop is Test {
+    Snow snow;
+    Snowman nft;
+    SnowmanAirdrop airdrop;
+    MockWETH weth;
 
-        // deploying Snow Token
-        MockWETH weth = new MockWETH();
-        uint256 fee = 5;
-        vm.prank(deployer);
-        Snow snow = new Snow(address(weth), fee, collector);
+    Helper deployer;
 
-        // deploying Snowman
-        string memory snowmanSvg = vm.readFile("./img/snowman.svg");
-        vm.prank(deployer);
-        Snowman snowman = new Snowman(svgToImageURI(snowmanSvg));
+    bytes32 public ROOT = 0xc0b6787abae0a5066bc2d09eaec944c58119dc18be796e93de5b2bf9f80ea79a;
 
-        // deploying SnowmanAirdrop
-        vm.prank(deployer);
-        bytes32 s_MERKLE_ROOT = 0xc0b6787abae0a5066bc2d09eaec944c58119dc18be796e93de5b2bf9f80ea79a; // Gotten from output.json
-        SnowmanAirdrop airdrop = new SnowmanAirdrop(s_MERKLE_ROOT, address(snow), address(snowman));
+    // Proofs
+    bytes32 alProofA = 0xf99782cec890699d4947528f9884acaca174602bb028a66d0870534acf241c52;
+    bytes32 alProofB = 0xbc5a8a0aad4a65155abf53bb707aa6d66b11b220ecb672f7832c05613dba82af;
+    bytes32 alProofC = 0x971653456742d62534a5d7594745c292dda6a75c69c43a6a6249523f26e0cac1;
+    bytes32[] AL_PROOF = [alProofA, alProofB, alProofC];
 
-        console2.log("Snow contract: ", address(snow));
-        console2.log("Snowman contract: ", address(snowman));
-        console2.log("SnowmanAirdrop contract: ", address(airdrop));
+    bytes32 bobProofA = 0x51c4b9a3cc313d7d7325f2d5d9e782a5a484e56a38947ab7eea7297ec86ff138;
+    bytes32 bobProofB = 0xbc5a8a0aad4a65155abf53bb707aa6d66b11b220ecb672f7832c05613dba82af;
+    bytes32 bobProofC = 0x971653456742d62534a5d7594745c292dda6a75c69c43a6a6249523f26e0cac1;
+    bytes32[] BOB_PROOF = [bobProofA, bobProofB, bobProofC];
+
+    bytes32 clProofA = 0x0065f7c9c934093ee1c4d51b77e77ad69d1c21351298d21cc720df18a39412f5;
+    bytes32 clProofB = 0xe4f70a2d0da3e6c29810b3eb84deeae82d06479d602b0e64225458c968f98cc1;
+    bytes32 clProofC = 0x971653456742d62534a5d7594745c292dda6a75c69c43a6a6249523f26e0cac1;
+    bytes32[] CL_PROOF = [clProofA, clProofB, clProofC];
+
+    bytes32 danProofA = 0xc7c84a70b50ff4103e9a8b3a716b446a138a507fc1b65ebdfae38439e52b2612;
+    bytes32 danProofB = 0xe4f70a2d0da3e6c29810b3eb84deeae82d06479d602b0e64225458c968f98cc1;
+    bytes32 danProofC = 0x971653456742d62534a5d7594745c292dda6a75c69c43a6a6249523f26e0cac1;
+    bytes32[] DAN_PROOF = [danProofA, danProofB, danProofC];
+
+    bytes32 eliProofA = 0x0000000000000000000000000000000000000000000000000000000000000000;
+    bytes32 eliProofB = 0x0000000000000000000000000000000000000000000000000000000000000000;
+    bytes32 eliProofC = 0xd7ed3892547c15a926b49d400e13fefe2c9f08de658f08b09925d5790383e978;
+    bytes32[] ELI_PROOF = [eliProofA, eliProofB, eliProofC];
+
+    // Multi claimers and key
+    address alice;
+    uint256 alKey;
+    address bob;
+    uint256 bobKey;
+    address clara;
+    uint256 clKey;
+    address dan;
+    uint256 danKey;
+    address eli;
+    uint256 eliKey;
+
+    address satoshi;
+
+    function setUp() public {
+        deployer = new Helper();
+
+        (airdrop, snow, nft, weth) = deployer.run();
+
+        (alice, alKey) = makeAddrAndKey("alice");
+        (bob, bobKey) = makeAddrAndKey("bob");
+        (clara, clKey) = makeAddrAndKey("clara");
+        (dan, danKey) = makeAddrAndKey("dan");
+        (eli, eliKey) = makeAddrAndKey("eli");
+
+        satoshi = makeAddr("gas_payer");
     }
 
-    function svgToImageURI(string memory svg) public pure returns (string memory) {
-        string memory baseURL = "data:image/svg+xml;base64,";
-        string memory svgBase64Encoded = Base64.encode(bytes(string(abi.encodePacked(svg))));
-        return string(abi.encodePacked(baseURL, svgBase64Encoded));
+    // @? - by the readme this earn timer reset only will be on earn function
+    function testAnyoneAnytimeCanMintSnowman() public {
+        vm.prank(bob);
+        nft.mintSnowman(bob, 10);
+
+        assertEq(nft.balanceOf(bob), 10);
     }
 }

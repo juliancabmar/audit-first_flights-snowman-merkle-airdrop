@@ -1,6 +1,13 @@
-[Obtener tokens `Snow` comprandolos]
+Obtener tokens `Snow` comprandolos:
 
-User uses some of his ETHs for buy Snow tokens [A: User / T: Snow::buySnow]
 
-User allow Snow contract for transfer Weth
-    User buy Snow tokens [A: User / T: Snow::buySnow]
+[ETH on account]    
+    p: {value} enough ETH
+    p: quantity to buy
+        User--> Snow::buySnow{value}(params)
+            [buyed Snow tokens with ETH]
+
+[WETH owned]
+    p: quantity to buy
+        User--> Snow::buySnow(params)
+            [buyed Snow tokens with WETH]
