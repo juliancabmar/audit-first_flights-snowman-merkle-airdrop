@@ -272,3 +272,212 @@ function claimSnowman(address receiver, bytes32[] calldata merkleProof, uint8 v,
 }
 ```
 
+### [M] Unburned Snow tokens becomes inflationary.
+
+**Description:**\
+When a user claims an NFT in `SnowmanAirdrop`, the Snow tokens are transferred to the contract but never burned, remaining in circulation.
+
+**Impact:**\
+This leads to inflation of the Snow token supply, as claimed tokens are not removed from the total supply, potentially reducing the token's value and undermining the intended tokenomics.
+
+
+**Recommended Mitigation:**\
+Burn just after Nft minting:
+
+```diff
+function claimSnowman(address receiver, bytes32[] calldata merkleProof, uint8 v, bytes32 r, bytes32 s)
+    external
+    nonReentrant
+{
+    if (receiver == address(0)) {
+        revert SA__ZeroAddress();
+    }
+    if (i_snow.balanceOf(receiver) == 0) {
+        revert SA__ZeroAmount();
+    }
+
+    if (!_isValidSignature(receiver, getMessageHash(receiver), v, r, s)) {
+        revert SA__InvalidSignature();
+    }
+
+    uint256 amount = i_snow.balanceOf(receiver);
+
+    bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(receiver, amount))));
+
+    if (!MerkleProof.verify(merkleProof, i_merkleRoot, leaf)) {
+        revert SA__InvalidProof();
+    }
+
+    i_snow.safeTransferFrom(receiver, address(this), amount); // send tokens to contract... akin to burning
+
+    s_hasClaimedSnowman[receiver] = true;
+
+    emit SnowmanClaimedSuccessfully(receiver, amount);
+
+    i_snowman.mintSnowman(receiver, amount);
++   i_snow.burn(amount);
+}
+```
+
+### [L] Misspelling on `SnowmanAirdrop::MESSAGE_TYPEHASH`. 
+
+**Description:**\
+The `MESSAGE_TYPEHASH` constant in `SnowmanAirdrop` is misspelled as `"SnowmanClaim(addres receiver, uint256 amount)"` (missing a "s" in "address").
+
+**Impact:**\
+None
+
+**Recommended Mitigation:**\
+Correct the spelling to `address`:
+
+```diff
+- bytes32 private constant MESSAGE_TYPEHASH = keccak256("SnowmanClaim(addres receiver, uint256 amount)");
++ bytes32 private constant MESSAGE_TYPEHASH = keccak256("SnowmanClaim(address receiver, uint256 amount)");
+```
+
+### [L] Array `SnowmanAirdrop::s_claimers` never used.
+
+**Description:**\
+The `SnowmanAirdrop::s_claimers` array is never used on the entirely protocol.
+
+```solidity
+    .
+    .
+    // >>> TYPE
+    struct SnowmanClaim {
+        address receiver;
+        uint256 amount;
+    }
+
+    // >>> VARIABLES
+@>  address[] private s_claimers; // array to store addresses of claimers
+    bytes32 private immutable i_merkleRoot; // Merkle root used to validate airdrop claims
+    Snow private immutable i_snow; // Snow token to be staked for the airdrop
+    Snowman private immutable i_snowman; // Snowman nft to be claimed
+
+    mapping(address => bool) private s_hasClaimedSnowman; // mapping to verify if an address has claimed Snowman
+    .
+    .
+```
+
+**Recommended Mitigation:**\
+Remove or use it
+
+
+### [L] Error `Snowman::SM__NotAllowed` never used
+
+**Description:**\
+The error `Snowman::SM__NotAllowed` was declared but never used in the entirely protocol.
+
+```solidity
+contract Snowman is ERC721, Ownable {
+    // >>> ERROR
+    error ERC721Metadata__URI_QueryFor_NonExistentToken();
+@>  error SM__NotAllowed();
+
+    // >>> VARIABLES
+    uint256 private s_TokenCounter;
+    string private s_SnowmanSvgUri;
+
+    // >>> EVENTS
+    event SnowmanMinted(address indexed receiver, uint256 indexed numberOfSnowman);
+    .
+    .
+```
+
+**Recommended Mitigation:**\
+Remove or use it
+
+
+### [L] `Snow::changeCollector` function not check for duplicate collectors.
+
+**Description:**\
+The `Snow::changeCollector` function have check for zero address, but not for set the active collector again.
+
+```solidity
+function changeCollector(address _newCollector) external onlyCollector {
+    if (_newCollector == address(0)) {
+        revert S__ZeroAddress();
+    }
+
+@>  s_collector = _newCollector;
+
+    emit NewCollector(_newCollector);
+}
+```
+
+**Impact:**\
+Unnecesary gas consumption
+
+**Recommended Mitigation:**\
+On `Snow::changeCollector` revert if the new collector address is the same that the old:
+
+```diff
+function changeCollector(address _newCollector) external onlyCollector {
+    if (_newCollector == address(0)) {
+        revert S__ZeroAddress();
+    }
+
++   if (s_collector == _newCollector) {
++       revert("Not Allow The Same Address");
++   }
+
+    s_collector = _newCollector;
+
+    emit NewCollector(_newCollector);
+}
+```
+
+
+### [S-#] Event `Snow::FeeCollected` not used on collect fees.
+
+**Description:**\
+The `FeeCollected` event is declared in the `Snow` contract but is never emitted during the fee collection process.
+
+```solidity
+    // >>> EVENTS
+    event SnowBought(address indexed buyer, uint256 indexed amount);
+    event SnowEarned(address indexed earner, uint256 indexed amount);
+@>  event FeeCollected();
+    event NewCollector(address indexed newCollector);
+```
+
+**Impact:**\
+Lack of event emission reduces transparency and makes it harder for off-chain systems or users to track when fees are collected.
+
+**Recommended Mitigation:**\
+Emit the `FeeCollected` event inside the `collectFees` function:
+
+```diff
+function collectFee() external onlyCollector {
+    uint256 collection = i_weth.balanceOf(address(this));
+    emit 
+    i_weth.transfer(s_collector, collection);
++   emit FeeCollected();
+    (bool collected,) = payable(s_collector).call{value: address(this).balance}("");
+    require(collected, "Fee collection failed!!!");
+}
+```
+
+
+### [L] Event `Snow::SnowEarned` not used on earn function
+
+**Description:**\
+The `SnowEarned` event is declared in the `Snow` contract but is never emitted in the `earnSnow` function.
+
+**Impact:**\
+Not emitting this event reduces transparency and makes it difficult for off-chain systems or users to track when Snow tokens are earned.
+
+**Recommended Mitigation:**\
+Emit the `SnowEarned` event inside the `earnSnow` function:
+
+```diff
+function earnSnow() external canFarmSnow {
+    if (s_earnTimer != 0 && block.timestamp < (s_earnTimer + 1 weeks)) {
+        revert S__Timer();
+    }
+    _mint(msg.sender, 1);
+
+    s_earnTimer = block.timestamp;
++   emit SnowEarned(msg.sender, 1);
+}
