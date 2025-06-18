@@ -481,3 +481,42 @@ function earnSnow() external canFarmSnow {
     s_earnTimer = block.timestamp;
 +   emit SnowEarned(msg.sender, 1);
 }
+```
+
+### [M] Calls `Snow::earnSnow` disable the earns for all users for another one week
+
+**Description:**\
+The `Snow::earnSnow` function uses a single global timer (`s_earnTimer`) for earning, affecting all users earnings.
+
+```solidity
+    function earnSnow() external canFarmSnow {
+        if (s_earnTimer != 0 && block.timestamp < (s_earnTimer + 1 weeks)) {
+            revert S__Timer();
+        }
+        _mint(msg.sender, 1);
+
+@>      s_earnTimer = block.timestamp;
+    }
+```
+
+**Impact:**\
+Only the first caller can earn Snow, and then all users are blocked from earning for one week, preventing fair participation and breaking the intended earning mechanism.
+
+**Proof of Concept:**\
+Add the following after the `TestSnowmanAirdrop` test suite:
+
+```solidity
+function testOnlyFirstCanEarnSnow() public {
+    vm.warp(block.timestamp + 1 weeks);
+
+    vm.prank(alice);
+    snow.earnSnow(); // Alice earns successfully
+
+    vm.expectRevert(Snow.S__Timer.selector);
+    vm.prank(bob);
+    snow.earnSnow(); // Bob is blocked for one week
+}
+```
+
+**Recommended Mitigation:**\
+Track the earn timer per user (e.g., with a mapping: `mapping(address => uint256) s_earnTimer;`) so each user has their own cooldown timer.

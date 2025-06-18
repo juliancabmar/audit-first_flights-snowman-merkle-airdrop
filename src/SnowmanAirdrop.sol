@@ -46,7 +46,7 @@ contract SnowmanAirdrop is EIP712, ReentrancyGuard {
 
     mapping(address => bool) private s_hasClaimedSnowman; // mapping to verify if an address has claimed Snowman
 
-    bytes32 private constant MESSAGE_TYPEHASH = keccak256("SnowmanClaim(address receiver, uint256 amount)"); // keccak256 hash of the SnowmanClaim struct's type signature, used for EIP-712 compliant message signing
+    bytes32 private constant MESSAGE_TYPEHASH = keccak256("SnowmanClaim(addres receiver, uint256 amount)"); // keccak256 hash of the SnowmanClaim struct's type signature, used for EIP-712 compliant message signing
 
     // >>> EVENTS
     event SnowmanClaimedSuccessfully(address receiver, uint256 amount); // emitted when a Snowman is claimed successfully

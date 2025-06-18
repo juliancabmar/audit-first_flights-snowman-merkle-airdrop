@@ -107,4 +107,15 @@ contract TestSnowmanAirdrop is Test {
         vm.prank(alice);
         airdrop.claimSnowman(alice, AL_PROOF, alV, alR, alS);
     }
+
+    function testOnlyFirstCanEarnSnow() public {
+        vm.warp(block.timestamp + 1 weeks);
+
+        vm.prank(alice);
+        snow.earnSnow(); // Alice earns successfully
+
+        vm.expectRevert(Snow.S__Timer.selector);
+        vm.prank(bob);
+        snow.earnSnow(); // Bob is blocked for one week
+    }
 }
