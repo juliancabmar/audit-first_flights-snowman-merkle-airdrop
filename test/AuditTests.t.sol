@@ -73,14 +73,12 @@ contract TestSnowmanAirdrop is Test {
     }
 
     // @? - by the readme this earn timer reset only will be on earn function
-    function testDoSOnSnowmanNft() public {
+    function testBalanceChangeDenialClaim() public {
         // Bob send to Alice 1 snow increasing her balance to 2
-        vm.prank(bob);
-        snow.transfer(alice, 1);
 
         // Alice claim setup
         vm.prank(alice);
-        snow.approve(address(airdrop), 2);
+        snow.approve(address(airdrop), 1);
 
         // Get alice's digest
         bytes32 alDigest = airdrop.getMessageHash(alice);
@@ -89,10 +87,24 @@ contract TestSnowmanAirdrop is Test {
         (uint8 alV, bytes32 alR, bytes32 alS) = vm.sign(alKey, alDigest);
 
         // Alice try to claims a Nft using her signed message
-        vm.expectRevert(SnowmanAirdrop.SA__InvalidProof.selector);
         vm.prank(alice);
         airdrop.claimSnowman(alice, AL_PROOF, alV, alR, alS);
 
-        // -----------------------------
+        // ---------------------------------------
+        vm.prank(bob);
+        snow.transfer(alice, 1);
+        // Alice claim setup
+        vm.prank(alice);
+        snow.approve(address(airdrop), 1);
+
+        // Get alice's digest
+        alDigest = airdrop.getMessageHash(alice);
+
+        // alice signs a message
+        (alV, alR, alS) = vm.sign(alKey, alDigest);
+
+        // Alice try to claims a Nft using her signed message
+        vm.prank(alice);
+        airdrop.claimSnowman(alice, AL_PROOF, alV, alR, alS);
     }
 }

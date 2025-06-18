@@ -81,7 +81,11 @@ contract SnowmanAirdrop is EIP712, ReentrancyGuard {
             revert SA__InvalidSignature();
         }
 
-        uint256 amount = i_snow.balanceOf(receiver);
+        if (s_hasClaimedSnowman[receiver]) {
+            revert("Nft Already Recived");
+        }
+        uint256 amount = 1;
+        // uint256 amount = i_snow.balanceOf(receiver);
 
         bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(receiver, amount))));
 
