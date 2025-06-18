@@ -4,7 +4,7 @@
 [@? - not checking for same collector address](src/Snow.sol#L114)
 [@audit - error not used](src/Snowman.sol#L20)
 +[@? - anyone can mint snowman NFT](src/Snowman.sol#L36)
-[@? - DoS by the token counter](src/Snowman.sol#L42)
++[@? - DoS by the token counter](src/Snowman.sol#L42)
 [@audit - array never used](src/SnowmanAirdrop.sol#L42)
 [@? - issue on line 120 for "address" not "addres"](src/SnowmanAirdrop.sol#L49)
 [@? - is necesary the double hashing, why](src/SnowmanAirdrop.sol#L86)
